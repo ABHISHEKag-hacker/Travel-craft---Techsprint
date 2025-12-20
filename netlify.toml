@@ -1,11 +1,12 @@
 [build]
   command = "pip install -r requirements.txt"
-  publish = "static" # This can be an empty folder or your static assets
+  publish = "static" # This folder must exist, even if it only has a placeholder
+
+[functions]
+  directory = "netlify/functions" # Tells Netlify where app.py is
+  included_files = ["templates/**", "Travel Planner Agent.py"] # Vital for your Flask app to work
 
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/app"
+  to = "/.netlify/functions/app" # Routes all web traffic to your Flask function
   status = 200
-
-[functions]
-  included_files = ["templates/**", "Travel Planner Agent.py"]
