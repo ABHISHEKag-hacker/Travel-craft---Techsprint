@@ -1,0 +1,11 @@
+[build]
+  command = "pip install -r requirements.txt"
+  publish = "static" # This can be an empty folder or your static assets
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/app"
+  status = 200
+
+[functions]
+  included_files = ["templates/**", "Travel Planner Agent.py"]
