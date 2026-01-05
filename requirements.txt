@@ -1,4 +1,17 @@
-flask
-openai
-reportlab
-serverless-wsgi
+# Core Flask
+flask>=2.3.0
+
+# OpenAI SDK for OpenRouter
+openai>=1.0.0
+
+# PDF Generation
+reportlab>=4.0.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Serverless deployment
+serverless-wsgi>=3.0.0
+
+# CORS support (optional)
+flask-cors>=4.0.0

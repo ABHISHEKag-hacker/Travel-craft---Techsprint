@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Planner | AI-Powered Itineraries</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2C4A52;
+            --primary-light: #537A82;
+            --secondary: #C17F59;
+            --accent: #8B9D83;
+            --dark: #1A1A2E;
+            --dark-light: #2D2D44;
+            --text-dark: #1A1A2E;
+            --text-light: #F5F5F5;
+            --text-muted: #6B7280;
+            --white: #FFFFFF;
+            --cream: #FAF8F5;
+            --sand: #E8E2D9;
+            --overlay: rgba(26, 26, 46, 0.7);
+            --glass: rgba(255, 255, 255, 0.95);
+            --glass-dark: rgba(26, 26, 46, 0.85);
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --radius: 16px;
+            --radius-lg: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--cream);
+            color: var(--text-dark);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Hero Background */
+        .hero-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(44, 74, 82, 0.85), rgba(26, 26, 46, 0.9)),
+                url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=2021&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--secondary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--white);
+            letter-spacing: -0.5px;
+        }
+
+        .tagline {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            font-weight: 300;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem 4rem;
+        }
+
+        /* Form Card */
+        .form-card {
+            background: var(--glass);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .form-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            background: var(--cream);
+            border: 2px solid var(--sand);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+            color: var(--text-dark);
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--white);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Preferences */
+        .preferences-section {
+            margin-top: 0.5rem;
+        }
+
+        .preferences-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .preference-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: var(--cream);
+            border: 2px solid var(--sand);
+            border-radius: var(--radius);
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            min-width: fit-content;
+        }
+
+        .preference-item:hover {
+            border-color: var(--primary-light);
+            transform: translateY(-2px);
+        }
+
+        .preference-item.selected {
+            border-color: var(--primary);
+            background: rgba(44, 74, 82, 0.12);
+            box-shadow: 0 2px 8px rgba(44, 74, 82, 0.15);
+        }
+
+        .preference-item input {
+            display: none;
+        }
+
+        .preference-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .preference-label {
+            font-weight: 500;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            grid-column: 1 / -1;
+            background: var(--primary);
+            border: none;
+            border-radius: var(--radius);
+            padding: 1.25rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            background: var(--dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 2rem;
+            text-align: center;
+            background: var(--glass);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .loader {
+            width: 56px;
+            height: 56px;
+            border: 3px solid var(--sand);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-subtext {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Results Section */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Summary Card */
+        .summary-card {
+            background: var(--glass);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .destination-info h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .destination-info p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .budget-display {
+            text-align: right;
+        }
+
+        .budget-display .label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .budget-display .amount {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--sand);
+            border-bottom: 1px solid var(--sand);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .summary-text {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: var(--cream);
+            border-radius: var(--radius);
+            font-style: italic;
+            color: var(--text-dark);
+            line-height: 1.7;
+            border-left: 4px solid var(--secondary);
+        }
+
+        /* Day Cards */
+        .days-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .day-card {
+            background: var(--glass);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .day-card:hover {
+            box-shadow: var(--shadow);
+            transform: translateY(-4px);
+        }
+
+        .day-header {
+            background: var(--primary);
+            color: var(--white);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .day-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .day-cost {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .activities-list {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--cream);
+            border-radius: var(--radius);
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: var(--sand);
+        }
+
+        .activity-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--white);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-name {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .activity-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .time-badge {
+            background: var(--accent);
+            color: var(--white);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        /* Cost Breakdown */
+        .cost-breakdown {
+            background: var(--glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-top: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cost-breakdown h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .cost-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--sand);
+            font-size: 0.95rem;
+        }
+
+        .cost-row:last-child {
+            border-bottom: none;
+        }
+
+        .cost-row.total {
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding-top: 1rem;
+            margin-top: 0.5rem;
+            border-top: 2px solid var(--primary);
+            border-bottom: none;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--sand);
+            border-radius: 4px;
+            margin-top: 1.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 0.75rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .action-btn {
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 2px solid;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--dark);
+            border-color: var(--dark);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* Error State */
+        .error-message {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #991B1B;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            text-align: center;
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .summary-header {
+                flex-direction: column;
+            }
+
+            .budget-display {
+                text-align: left;
+            }
+
+            .form-card {
+                padding: 2rem;
+            }
+
+            .destination-info h2 {
+                font-size: 1.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .preferences-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Number Input Wrapper (for adults/children) */
+        .travelers-row {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .traveler-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .traveler-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .number-input-wrapper {
+            display: inline-flex;
+            align-items: center;
+            background: var(--cream);
+            border: 2px solid var(--sand);
+            border-radius: var(--radius);
+            overflow: hidden;
+            width: fit-content;
+        }
+
+        .number-input-wrapper input[type="number"] {
+            width: 50px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            padding: 0.75rem 0;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        .number-input-wrapper input[type="number"]::-webkit-outer-spin-button,
+        .number-input-wrapper input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        .number-input-wrapper input:focus {
+            outline: none;
+        }
+
+        .number-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--sand);
+            color: var(--text-dark);
+            font-size: 1.25rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .number-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .number-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Hotel Toggle Styles */
+        .hotel-section {
+            margin-top: 1rem;
+        }
+
+        .hotel-toggle-container {
+            margin-bottom: 1rem;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--cream);
+            border: 2px solid var(--sand);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-label:hover {
+            border-color: var(--primary-light);
+        }
+
+        .toggle-text {
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--sand);
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background-color: var(--primary);
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .hotel-options {
+            margin-top: 1rem;
+            padding: 1.25rem;
+            background: var(--cream);
+            border: 2px solid var(--sand);
+            border-radius: var(--radius);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hotel-options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .hotel-option-group label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .rating-buttons,
+        .room-type-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .rating-btn,
+        .room-btn {
+            padding: 0.6rem 1rem;
+            border: 2px solid var(--sand);
+            border-radius: 2rem;
+            background: var(--white);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .rating-btn:hover,
+        .room-btn:hover {
+            border-color: var(--primary-light);
+            background: rgba(44, 74, 82, 0.05);
+        }
+
+        .rating-btn.selected,
+        .room-btn.selected {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        /* Travel & Hotel Cost Card */
+        .travel-hotel-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--white);
+            box-shadow: var(--shadow);
+        }
+
+        .travel-hotel-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .travel-hotel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .travel-hotel-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius);
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .travel-hotel-item .label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+        }
+
+        .travel-hotel-item .value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .travel-hotel-item .details {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 480px) {
+            .rating-buttons {
+                flex-direction: column;
+            }
+
+            .rating-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .travel-hotel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Budget Warning Alert */
+        .budget-warning {
+            background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+            border: 2px solid #F59E0B;
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .budget-warning.exceeded {
+            background: linear-gradient(135deg, #FEE2E2, #FECACA);
+            border-color: #EF4444;
+        }
+
+        .budget-warning-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .budget-warning-text {
+            color: #92400E;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .budget-warning.exceeded .budget-warning-text {
+            color: #991B1B;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* Stats grid with 5 items */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--sand);
+            border-bottom: 1px solid var(--sand);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hero-bg"></div>
+
+    <header>
+        <div class="logo">
+            <div class="logo-icon">✈</div>
+            <span class="logo-text">TravelCraft</span>
+        </div>
+        <p class="tagline">Intelligent travel planning for unforgettable journeys</p>
+    </header>
+
+    <div class="container">
+        <!-- Form Section -->
+        <section class="form-card" id="formSection">
+            <div class="form-header">
+                <h2>Plan Your Journey</h2>
+                <p>Tell us about your dream trip and we'll create a personalized itinerary</p>
+            </div>
+
+            <form id="travelForm" class="form-grid">
+                <div class="form-group">
+                    <label for="budget">Budget (₹ INR)</label>
+                    <input type="number" id="budget" name="budget" placeholder="e.g., 50000" min="1000" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="days">Duration (Days)</label>
+                    <input type="number" id="days" name="days" placeholder="e.g., 4" min="1" max="30" required>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="city">Destination</label>
+                    <input type="text" id="city" name="city" placeholder="Where would you like to go?" required>
+                </div>
+
+                <!-- Number of Travelers -->
+                <div class="form-group full-width">
+                    <label>Travelers</label>
+                    <div class="travelers-row">
+                        <div class="traveler-group">
+                            <label for="adults">👨 Adults</label>
+                            <div class="number-input-wrapper">
+                                <button type="button" class="number-btn minus" data-target="adults">−</button>
+                                <input type="number" id="adults" name="adults" value="2" min="1" max="10" required>
+                                <button type="button" class="number-btn plus" data-target="adults">+</button>
+                            </div>
+                        </div>
+                        <div class="traveler-group">
+                            <label for="children">👶 Children (0-12)</label>
+                            <div class="number-input-wrapper">
+                                <button type="button" class="number-btn minus" data-target="children">−</button>
+                                <input type="number" id="children" name="children" value="0" min="0" max="10">
+                                <button type="button" class="number-btn plus" data-target="children">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group full-width preferences-section">
+                    <label>What interests you?</label>
+                    <div class="preferences-grid">
+                        <label class="preference-item selected" data-pref="sightseeing">
+                            <input type="checkbox" value="sightseeing" checked>
+                            <span class="preference-icon">🏛</span>
+                            <span>Sightseeing</span>
+                        </label>
+                        <label class="preference-item" data-pref="adventure">
+                            <input type="checkbox" value="adventure">
+                            <span class="preference-icon">🏔</span>
+                            <span>Adventure</span>
+                        </label>
+                        <label class="preference-item selected" data-pref="cultural">
+                            <input type="checkbox" value="cultural" checked>
+                            <span class="preference-icon">🎭</span>
+                            <span>Culture</span>
+                        </label>
+                        <label class="preference-item selected" data-pref="food">
+                            <input type="checkbox" value="food" checked>
+                            <span class="preference-icon">🍽</span>
+                            <span>Food</span>
+                        </label>
+                        <label class="preference-item" data-pref="relaxation">
+                            <input type="checkbox" value="relaxation">
+                            <span class="preference-icon">🧘</span>
+                            <span>Relaxation</span>
+                        </label>
+                        <label class="preference-item" data-pref="shopping">
+                            <input type="checkbox" value="shopping">
+                            <span class="preference-icon">🛍</span>
+                            <span>Shopping</span>
+                        </label>
+                        <label class="preference-item" data-pref="nightlife">
+                            <input type="checkbox" value="nightlife">
+                            <span class="preference-icon">🌃</span>
+                            <span>Nightlife</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Origin City for Travel Cost -->
+                <div class="form-group full-width">
+                    <label for="originCity">Your Origin City (for travel cost)</label>
+                    <input type="text" id="originCity" name="originCity" placeholder="e.g., Mumbai, Delhi, Bangalore">
+                </div>
+
+                <!-- Hotel Options -->
+                <div class="form-group full-width hotel-section">
+                    <div class="hotel-toggle-container">
+                        <label class="toggle-label">
+                            <span class="toggle-text">🏨 Include Hotel Stay</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="includeHotel" name="includeHotel">
+                                <span class="toggle-slider"></span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="hotel-options" id="hotelOptions" style="display: none;">
+                        <div class="hotel-options-grid">
+                            <div class="hotel-option-group">
+                                <label>Hotel Rating</label>
+                                <div class="rating-buttons">
+                                    <button type="button" class="rating-btn" data-rating="2">⭐⭐ Budget</button>
+                                    <button type="button" class="rating-btn selected" data-rating="3">⭐⭐⭐
+                                        Standard</button>
+                                    <button type="button" class="rating-btn" data-rating="4">⭐⭐⭐⭐ Premium</button>
+                                    <button type="button" class="rating-btn" data-rating="5">⭐⭐⭐⭐⭐ Luxury</button>
+                                </div>
+                            </div>
+                            <div class="hotel-option-group">
+                                <label>Room Type</label>
+                                <div class="room-type-buttons">
+                                    <button type="button" class="room-btn" data-room="non-ac">🌀 Non-AC</button>
+                                    <button type="button" class="room-btn selected" data-room="ac">❄️ AC</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Create My Itinerary
+                </button>
+            </form>
+        </section>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState">
+            <div class="loader"></div>
+            <p class="loading-text">Crafting Your Journey</p>
+            <p class="loading-subtext">Our AI is designing a personalized itinerary just for you...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage">
+            <p>❌ <span id="errorText">Something went wrong. Please try again.</span></p>
+        </div>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection">
+            <!-- Budget Warning Alert (shown when costs exceed budget) -->
+            <div class="budget-warning" id="budgetWarning" style="display: none;">
+                <span class="budget-warning-icon">⚠️</span>
+                <span class="budget-warning-text" id="budgetWarningText">
+                    Your travel and hotel costs exceed your budget. Consider adjusting your options.
+                </span>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-header">
+                    <div class="destination-info">
+                        <h2 id="resultCity">Paris</h2>
+                        <p id="resultDays">4 days of adventure</p>
+                    </div>
+                    <div class="budget-display">
+                        <div class="label">Total Cost</div>
+                        <div class="amount" id="resultTotalCost">₹1,650</div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statBudget">₹2,000</div>
+                        <div class="stat-label">Budget</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statTravelers">2</div>
+                        <div class="stat-label">Travelers</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statRemaining">₹350</div>
+                        <div class="stat-label">Remaining</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statUtilization">82%</div>
+                        <div class="stat-label">Utilized</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statActivities">16</div>
+                        <div class="stat-label">Activities</div>
+                    </div>
+                </div>
+
+                <div class="summary-text" id="resultSummary">
+                    Your trip is going to be amazing...
+                </div>
+            </div>
+
+            <!-- Travel & Hotel Cost Card (shown conditionally) -->
+            <div class="travel-hotel-card" id="travelHotelCard" style="display: none;">
+                <h3>🚂 Travel & 🏨 Hotel Costs</h3>
+                <div class="travel-hotel-grid">
+                    <div class="travel-hotel-item" id="travelCostItem">
+                        <div class="label">Travel Cost</div>
+                        <div class="value" id="travelCostValue">₹0</div>
+                        <div class="details" id="travelDetails">Origin → Destination</div>
+                    </div>
+                    <div class="travel-hotel-item" id="hotelCostItem">
+                        <div class="label">Hotel Cost</div>
+                        <div class="value" id="hotelCostValue">₹0</div>
+                        <div class="details" id="hotelDetails">Hotel details</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="days-container" id="daysContainer">
+                <!-- Days will be inserted here -->
+            </div>
+
+            <div class="cost-breakdown">
+                <h3>Cost Breakdown</h3>
+                <div class="cost-items" id="costBreakdown">
+                    <!-- Cost items will be inserted here -->
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="utilizationBar" style="width: 0%"></div>
+                </div>
+                <p class="progress-text" id="utilizationText">82% of budget utilized</p>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn btn-primary" id="downloadPdfBtn">
+                    <span>📄</span>
+                    <span>Download PDF</span>
+                </button>
+                <button class="action-btn btn-secondary" id="newPlanBtn">
+                    <span>↻</span>
+                    <span>Plan New Trip</span>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Preference selection
+        document.querySelectorAll('.preference-item').forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox.checked) {
+                item.classList.add('selected');
+            }
+
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                checkbox.checked = !checkbox.checked;
+                item.classList.toggle('selected');
+            });
+        });
+
+        // Hotel toggle functionality
+        const hotelToggle = document.getElementById('includeHotel');
+        const hotelOptions = document.getElementById('hotelOptions');
+
+        hotelToggle.addEventListener('change', () => {
+            hotelOptions.style.display = hotelToggle.checked ? 'block' : 'none';
+        });
+
+        // Rating buttons
+        let selectedRating = 3;
+        document.querySelectorAll('.rating-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedRating = parseInt(btn.dataset.rating);
+            });
+        });
+
+        // Room type buttons
+        let selectedRoomType = 'ac';
+        document.querySelectorAll('.room-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedRoomType = btn.dataset.room;
+            });
+        });
+
+        // Number input buttons (for adults/children)
+        document.querySelectorAll('.number-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.target;
+                const input = document.getElementById(targetId);
+                const currentValue = parseInt(input.value) || 0;
+                const min = parseInt(input.min) || 0;
+                const max = parseInt(input.max) || 10;
+
+                if (btn.classList.contains('plus')) {
+                    if (currentValue < max) {
+                        input.value = currentValue + 1;
+                    }
+                } else if (btn.classList.contains('minus')) {
+                    if (currentValue > min) {
+                        input.value = currentValue - 1;
+                    }
+                }
+            });
+        });
+
+        // Form submission
+        document.getElementById('travelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formSection = document.getElementById('formSection');
+            const loadingState = document.getElementById('loadingState');
+            const resultsSection = document.getElementById('resultsSection');
+            const errorMessage = document.getElementById('errorMessage');
+
+            const budget = parseFloat(document.getElementById('budget').value);
+            const days = parseInt(document.getElementById('days').value);
+            const city = document.getElementById('city').value;
+            const adults = parseInt(document.getElementById('adults').value) || 2;
+            const children = parseInt(document.getElementById('children').value) || 0;
+            const originCity = document.getElementById('originCity').value || '';
+            const includeHotel = document.getElementById('includeHotel').checked;
+            const preferences = Array.from(document.querySelectorAll('.preference-item input:checked'))
+                .map(cb => cb.value);
+
+            if (preferences.length === 0) {
+                alert('Please select at least one interest!');
+                return;
+            }
+
+            formSection.style.display = 'none';
+            loadingState.classList.add('show');
+            errorMessage.classList.remove('show');
+            resultsSection.classList.remove('show');
+
+            try {
+                const requestData = {
+                    budget,
+                    days,
+                    city,
+                    adults,
+                    children,
+                    preferences,
+                    origin_city: originCity,
+                    include_hotel: includeHotel,
+                    hotel_rating: selectedRating,
+                    room_type: selectedRoomType
+                };
+
+                const response = await fetch('/plan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.plan);
+                    loadingState.classList.remove('show');
+                    resultsSection.classList.add('show');
+                } else {
+                    throw new Error(data.error || 'Failed to generate plan');
+                }
+            } catch (error) {
+                loadingState.classList.remove('show');
+                formSection.style.display = 'block';
+                errorMessage.classList.add('show');
+                document.getElementById('errorText').textContent = error.message;
+            }
+        });
+
+        // Store current plan
+        let currentPlan = null;
+
+        // Display results
+        function displayResults(plan) {
+            currentPlan = plan;
+
+            document.getElementById('resultCity').textContent = plan.city;
+            document.getElementById('resultDays').textContent = `${plan.num_days} days of adventure`;
+
+            // Calculate grand total including activities, travel, and hotel
+            const activityCost = plan.total_cost;
+            const travelCost = plan.travel_cost || 0;
+            const hotelCost = plan.hotel_cost || 0;
+            const grandTotal = activityCost + travelCost + hotelCost;
+
+            document.getElementById('resultTotalCost').textContent = formatCurrency(grandTotal);
+            document.getElementById('resultSummary').textContent = plan.summary;
+
+            document.getElementById('statBudget').textContent = formatCurrency(plan.budget);
+
+            // Display travelers
+            const adults = plan.adults || 2;
+            const children = plan.children || 0;
+            const travelersText = children > 0 ? `${adults}+${children}` : `${adults}`;
+            document.getElementById('statTravelers').textContent = travelersText;
+
+            const remaining = plan.budget - grandTotal;
+            document.getElementById('statRemaining').textContent = formatCurrency(remaining);
+            const utilization = Math.min(100, Math.round((grandTotal / plan.budget) * 100));
+            document.getElementById('statUtilization').textContent = `${utilization}%`;
+
+            let totalActivities = 0;
+            plan.days.forEach(day => totalActivities += day.activities.length);
+            document.getElementById('statActivities').textContent = totalActivities;
+
+            // Show budget warning if applicable
+            const budgetWarning = document.getElementById('budgetWarning');
+            const budgetWarningText = document.getElementById('budgetWarningText');
+
+            if (plan.budget_warning) {
+                budgetWarning.style.display = 'flex';
+                budgetWarningText.textContent = plan.budget_warning;
+
+                // Add 'exceeded' class for red styling if budget is really exceeded
+                if (plan.budget_exceeded) {
+                    budgetWarning.classList.add('exceeded');
+                } else {
+                    budgetWarning.classList.remove('exceeded');
+                }
+            } else {
+                budgetWarning.style.display = 'none';
+            }
+
+            // Show travel & hotel card if applicable
+            const travelHotelCard = document.getElementById('travelHotelCard');
+            if (travelCost > 0 || hotelCost > 0) {
+                travelHotelCard.style.display = 'block';
+
+                if (travelCost > 0) {
+                    document.getElementById('travelCostItem').style.display = 'block';
+                    document.getElementById('travelCostValue').textContent = formatCurrency(travelCost);
+                    document.getElementById('travelDetails').textContent = plan.travel_details || 'Round trip estimated cost';
+                } else {
+                    document.getElementById('travelCostItem').style.display = 'none';
+                }
+
+                if (hotelCost > 0) {
+                    document.getElementById('hotelCostItem').style.display = 'block';
+                    document.getElementById('hotelCostValue').textContent = formatCurrency(hotelCost);
+                    document.getElementById('hotelDetails').textContent = plan.hotel_details || 'Accommodation for your stay';
+                } else {
+                    document.getElementById('hotelCostItem').style.display = 'none';
+                }
+            } else {
+                travelHotelCard.style.display = 'none';
+            }
+
+            const daysContainer = document.getElementById('daysContainer');
+            daysContainer.innerHTML = '';
+
+            plan.days.forEach(day => {
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card';
+
+                let activitiesHtml = '';
+                day.activities.forEach(activity => {
+                    activitiesHtml += `
+                        <div class="activity-item">
+                            <div class="activity-icon">${activity.emoji}</div>
+                            <div class="activity-content">
+                                <div class="activity-name">${activity.name}</div>
+                                <div class="activity-description">${activity.description}</div>
+                                <div class="activity-meta">
+                                    <span class="time-badge">${activity.time_slot}</span>
+                                    <span class="meta-tag">⏱ ${activity.duration_hours}h</span>
+                                    <span class="meta-tag">${formatCurrency(activity.cost)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                dayCard.innerHTML = `
+                    <div class="day-header">
+                        <div class="day-title">Day ${day.day_number}</div>
+                        <div class="day-cost">${formatCurrency(day.total_cost)}</div>
+                    </div>
+                    <div class="activities-list">${activitiesHtml}</div>
+                `;
+
+                daysContainer.appendChild(dayCard);
+            });
+
+            const costBreakdown = document.getElementById('costBreakdown');
+            costBreakdown.innerHTML = '';
+
+            // Add travel cost if present
+            if (travelCost > 0) {
+                costBreakdown.innerHTML += `
+                    <div class="cost-row">
+                        <span>🚂 Travel</span>
+                        <span>${formatCurrency(travelCost)}</span>
+                    </div>
+                `;
+            }
+
+            // Add hotel cost if present
+            if (hotelCost > 0) {
+                costBreakdown.innerHTML += `
+                    <div class="cost-row">
+                        <span>🏨 Hotel (${plan.num_days} nights)</span>
+                        <span>${formatCurrency(hotelCost)}</span>
+                    </div>
+                `;
+            }
+
+            plan.days.forEach(day => {
+                costBreakdown.innerHTML += `
+                    <div class="cost-row">
+                        <span>Day ${day.day_number} Activities</span>
+                        <span>${formatCurrency(day.total_cost)}</span>
+                    </div>
+                `;
+            });
+
+            costBreakdown.innerHTML += `
+                <div class="cost-row total">
+                    <span>Grand Total</span>
+                    <span>${formatCurrency(grandTotal)}</span>
+                </div>
+            `;
+
+            setTimeout(() => {
+                document.getElementById('utilizationBar').style.width = `${utilization}%`;
+            }, 100);
+            document.getElementById('utilizationText').textContent = `${utilization}% of budget utilized`;
+        }
+
+        function formatCurrency(amount) {
+            return '₹' + amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // New plan button
+        document.getElementById('newPlanBtn').addEventListener('click', () => {
+            document.getElementById('formSection').style.display = 'block';
+            document.getElementById('resultsSection').classList.remove('show');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // PDF Download
+        document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+            if (!currentPlan) {
+                alert('No travel plan to download!');
+                return;
+            }
+
+            const btn = document.getElementById('downloadPdfBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span><span>Generating...</span>';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/download-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: currentPlan })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Travel_Itinerary_${currentPlan.city}_${currentPlan.num_days}days.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                } else {
+                    alert('Error generating PDF');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

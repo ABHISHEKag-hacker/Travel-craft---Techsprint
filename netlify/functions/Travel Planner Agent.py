@@ -26,7 +26,7 @@ except ImportError:
     exit(1)
 
 # OpenRouter API Configuration
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 
@@ -100,7 +100,7 @@ class UserInput:
 class LlamaAgent:
     """Interface to interact with LLM models via OpenRouter API"""
     
-    def __init__(self, model_name: str = "meta-llama/llama-3.3-70b-instruct"):
+    def __init__(self, model_name: str = "nex-agi/deepseek-v3.1-nex-n1:free"):
         self.model_name = model_name
         self.conversation_history = []
         self.client = OpenAI(
@@ -128,7 +128,7 @@ class LlamaAgent:
                 model=self.model_name,
                 messages=messages,
                 temperature=0.7,
-                max_tokens=2000
+                max_tokens=800
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -163,48 +163,17 @@ class TravelPlannerAgent:
     with rule-based constraints for budget and time management.
     """
     
-    def __init__(self, model_name: str = "meta-llama/llama-3.3-70b-instruct"):
+    def __init__(self, model_name: str = "nex-agi/deepseek-v3.1-nex-n1:free"):
         self.llama = LlamaAgent(model_name)
-        self.max_replanning_attempts = 3
+        self.max_replanning_attempts = 1  # Reduced for speed
         self.hours_per_day = 10  # Available hours for activities per day
         self.budget_utilization_target = 0.85  # Target 85% of budget
-        self.min_daily_spend_ratio = 0.70  # Minimum 70% of daily budget
+        self.min_daily_spend_ratio = 0.50  # Reduced for flexibility
         
     def get_system_prompt(self) -> str:
         """System prompt for the travel planning agent"""
-        return """You are an expert LUXURY travel planner AI assistant. Your role is to create PREMIUM, 
-unforgettable travel itineraries that FULLY UTILIZE the given budget in Indian Rupees (₹).
-
-CRITICAL RULES:
-1. ALWAYS spend 80-100% of the daily budget provided - DO NOT be conservative!
-2. Always respond with valid JSON when asked for structured data
-3. Include PREMIUM experiences: fine dining, guided tours, skip-the-line tickets, exclusive experiences
-4. Use realistic local prices in Indian Rupees (₹) for high-quality tourist activities
-5. Mix morning, afternoon, and evening activities
-6. Include unique, memorable experiences that justify the cost
-
-PRICING GUIDELINES IN INDIAN RUPEES (adjust based on city cost of living):
-- Premium guided tours: ₹2,000-₹8,000 per person
-- Fine dining meals: ₹2,000-₹6,000 per person  
-- Cultural shows/performances: ₹1,500-₹5,000 per person
-- Adventure activities: ₹3,000-₹10,000 per person
-- Museum/attraction entries: ₹500-₹2,500 per person
-- Spa/relaxation: ₹3,000-₹8,000 per session
-
-When generating activities, use this JSON format:
-{
-    "activities": [
-        {
-            "name": "Activity Name",
-            "description": "Brief description",
-            "duration_hours": 2.0,
-            "cost": 2500.0,
-            "activity_type": "sightseeing|adventure|cultural|food|relaxation|shopping|nightlife",
-            "time_slot": "morning|afternoon|evening"
-        }
-    ]
-}
-"""
+        return """You are a travel planner. Respond ONLY with valid JSON. Create premium activities in Indian Rupees (₹).
+JSON format: {"activities": [{"name": "string", "description": "short", "duration_hours": float, "cost": float, "activity_type": "sightseeing|adventure|cultural|food|relaxation|shopping|nightlife", "time_slot": "morning|afternoon|evening"}]}"""
     
     def generate_activities_for_day(
         self, 
@@ -225,37 +194,8 @@ When generating activities, use this JSON format:
         if day_number == 1:
             target_daily_spend = remaining_budget * self.budget_utilization_target / 3  # Assume 3-4 day trip on day 1
         
-        prompt = f"""Create a PREMIUM day plan for Day {day_number} in {city}.
-
-DAILY BUDGET TO SPEND: ₹{target_daily_spend:.0f} (YOU MUST spend 80-100% of this amount!)
-Total trip budget remaining: ₹{remaining_budget:.0f}
-User preferences: {', '.join(preferences)}
-Available hours: {self.hours_per_day} hours
-{previous_str}
-
-IMPORTANT: Create a PREMIUM experience! Include:
-- High-quality restaurants and dining experiences
-- Premium attractions and tours (not just free walking tours)
-- Unique local experiences worth the cost
-- Mix of morning, afternoon, and evening activities
-
-Generate 4-6 activities that SPEND the full daily budget of ₹{target_daily_spend:.0f}.
-Do NOT be conservative - the traveler wants to maximize their experience!
-All costs should be in Indian Rupees (₹).
-
-Respond ONLY with a valid JSON object in this exact format:
-{{
-    "activities": [
-        {{
-            "name": "Activity Name",
-            "description": "Brief description",
-            "duration_hours": 2.0,
-            "cost": 2500.0,
-            "activity_type": "sightseeing",
-            "time_slot": "morning"
-        }}
-    ]
-}}"""
+        prompt = f"""Day {day_number} in {city}. Budget: ₹{target_daily_spend:.0f}. Preferences: {', '.join(preferences)}. {self.hours_per_day}h available.{previous_str}
+Generate 3-4 activities. Respond with JSON only: {{"activities": [{{"name": "string", "description": "short", "duration_hours": float, "cost": float, "activity_type": "string", "time_slot": "morning|afternoon|evening"}}]}}"""
         
         response = self.llama.query(prompt, self.get_system_prompt())
         
@@ -564,29 +504,27 @@ Respond ONLY with valid JSON:
         return plan
     
     def generate_itinerary_summary(self, plan: TravelPlan) -> str:
-        """Generate a beautiful summary of the travel plan using Llama"""
+        """Generate a quick summary without extra API call for speed"""
         
-        # Build activities summary
-        activities_text = ""
+        # Get unique activity types
+        activity_types = set()
+        activity_names = []
         for day in plan.days:
-            activities_text += f"\nDay {day.day_number}:\n"
             for act in day.activities:
-                activities_text += f"- {act.name} ({act.time_slot}): ₹{act.cost:.0f}\n"
+                activity_types.add(act.activity_type)
+                activity_names.append(act.name)
         
-        prompt = f"""Create an exciting, engaging travel summary for this trip to {plan.city}:
-
-Budget: ₹{plan.budget:.0f}
-Total Cost: ₹{plan.total_cost:.0f}
-Days: {plan.num_days}
-
-Activities by day:
-{activities_text}
-
-Write a brief, enthusiastic 3-4 sentence summary that highlights the best experiences 
-and makes the traveler excited about their trip. Keep it concise and engaging."""
+        # Generate quick local summary
+        highlights = activity_names[:3] if len(activity_names) >= 3 else activity_names
+        types_str = ", ".join(list(activity_types)[:3])
         
-        response = self.llama.query(prompt)
-        return response if response else "Enjoy your amazing trip!"
+        savings = plan.budget - plan.total_cost
+        if savings > 0:
+            budget_msg = f"You'll save ₹{savings:.0f} from your budget!"
+        else:
+            budget_msg = "Your budget is fully optimized for this trip!"
+        
+        return f"Get ready for an amazing {plan.num_days}-day adventure in {plan.city}! Experience {types_str} with highlights like {', '.join(highlights)}. {budget_msg}"
     
     def print_itinerary(self, plan: TravelPlan):
         """Print a beautifully formatted itinerary"""
