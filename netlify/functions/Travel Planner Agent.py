@@ -9,12 +9,14 @@ Features:
 - Generates final itinerary + cost breakdown
 
 Requirements:
-- pip install openai
-- OpenRouter API key
+- pip install openai python-dotenv
+- OpenRouter API key (set in .env file)
 """
 
 import json
 import re
+import os
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional
 from enum import Enum
@@ -25,9 +27,31 @@ except ImportError:
     print("Please install openai: pip install openai")
     exit(1)
 
-# OpenRouter API Configuration
-OPENROUTER_API_KEY = "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"
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    # Find .env file - check multiple locations
+    env_paths = [
+        Path(__file__).parent.parent.parent / '.env',  # hackathon/.env
+        Path(__file__).parent / '.env',  # netlify/functions/.env
+        Path.cwd() / '.env'  # Current working directory
+    ]
+    for env_path in env_paths:
+        if env_path.exists():
+            load_dotenv(env_path)
+            print(f"✅ Loaded env from: {env_path}")
+            break
+except ImportError:
+    pass
+
+# OpenRouter API Configuration - from environment variables
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+DEFAULT_MODEL = os.environ.get('DEFAULT_MODEL', 'xiaomi/mimo-v2-flash:free')
+
+if not OPENROUTER_API_KEY:
+    print("❌ WARNING: OPENROUTER_API_KEY not found in environment variables!")
+    print("   Please set it in your .env file or system environment.")
 
 
 # ============================================================================
@@ -100,8 +124,8 @@ class UserInput:
 class LlamaAgent:
     """Interface to interact with LLM models via OpenRouter API"""
     
-    def __init__(self, model_name: str = "nex-agi/deepseek-v3.1-nex-n1:free"):
-        self.model_name = model_name
+    def __init__(self, model_name: str = None):
+        self.model_name = model_name or DEFAULT_MODEL
         self.conversation_history = []
         self.client = OpenAI(
             base_url=OPENROUTER_BASE_URL,
